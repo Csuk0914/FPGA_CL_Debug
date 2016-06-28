@@ -22,7 +22,7 @@ void SSSPHost(int num_steps, char * fname) {
    }
    g.copy_to_device();
    cl_kernel init_kernel = env.kernel1;//("apps/pr/PageRankPull.cl", "initialize");
-   cl_kernel pr_kernel = env.kernel2;//("apps/pr/PageRankPull.cl", "pageRank");
+   cl_kernel sssp_kernel = env.kernel2;//("apps/pr/PageRankPull.cl", "pageRank");
 
    size_t num_items = g.num_nodes();
    size_t k1_global, k1_local=256, k2_global, k2_local=256;
@@ -34,9 +34,9 @@ void SSSPHost(int num_steps, char * fname) {
 //   init_kernel.set_arg(0, &g);
    Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(init_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
 
-//   pr_kernel.set_work_size(g.num_nodes(), 256);
-//   pr_kernel.set_arg(0, &g);
-   Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(pr_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
+//   sssp_kernel.set_work_size(g.num_nodes(), 256);
+//   sssp_kernel.set_arg(0, &g);
+   Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(sssp_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
 
 
    //init_kernel();
@@ -44,12 +44,17 @@ void SSSPHost(int num_steps, char * fname) {
 
    clFinish(env.commands);
    fprintf(stderr, "Launched kernel\n");
+   clReleaseKernel(sssp_kernel);
 
    for (int i = 0; i < num_steps; ++i) {
-      //pr_kernel();
-      Galois::OpenCL::CHECK_CL_ERROR(clEnqueueNDRangeKernel(env.commands, pr_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event), "kernel2 failed.");
+      //sssp_kernel();
+      sssp_kernel =load_kernel(env, "sssp_kernel");
+      Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(sssp_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
+
+      Galois::OpenCL::CHECK_CL_ERROR(clEnqueueNDRangeKernel(env.commands, sssp_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event), "kernel2 failed.");
       fprintf(stderr, "Launched kernel %d\n", i);
       clFinish(env.commands);
+      clReleaseKernel(sssp_kernel);
       fprintf(stderr, "Launched kernel %d\n", i);
    }
    fprintf(stderr, "Copying to host ...\n");

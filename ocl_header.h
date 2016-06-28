@@ -30,6 +30,10 @@ extern "C" {
 #include "CLErrors.h"
 
 
+
+#ifndef GOPT_OCL_HEADER_H_
+#define GOPT_OCL_HEADER_H_
+
 struct CLEnv {
    size_t global;                      // global domain size for our calculation
    size_t local;                       // local domain size for our calculation
@@ -54,6 +58,23 @@ static inline const char *load_program_source(const char *filename) {
    fread(source, statbuf.st_size, 1, fh);
    source[statbuf.st_size] = 0;
    return source;
+}
+static cl_kernel load_kernel(CLEnv & env, std::string kernel_name){
+   cl_int err;
+   cl_kernel kernel;
+   kernel = clCreateKernel(env.program, kernel_name.c_str(), &err);
+      if (!kernel|| err != CL_SUCCESS) {
+         printf("Error: Failed to create compute kernel!\n");
+         exit(1);
+      }
+      err = clGetKernelWorkGroupInfo(kernel, env.device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(env.local), &env.local, NULL);
+      if (err != CL_SUCCESS) {
+         printf("Error: Failed to retrieve kernel work group info! %d\n", err);
+         exit(1);
+      }
+      printf("Local size detected :: %lu\n", env.local);
+      //////////////////////////////////////////////////////
+      return kernel;
 }
 /*********************************************************************
  *
@@ -156,8 +177,6 @@ int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, c
    return 0;
 }
 //////////////////////////////////////////
-#ifndef GOPT_OCL_HEADER_H_
-#define GOPT_OCL_HEADER_H_
 
 
 #endif /* GOPT_OCL_HEADER_H_ */
