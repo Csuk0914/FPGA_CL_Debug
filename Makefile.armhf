@@ -1,7 +1,7 @@
 CXX=arm-linux-gnueabihf-g++
 _USE_FPGA_=TRUE
 OS_NAME_STRING=$(shell uname)
-CFLAGS= -Wall -Wextra -lrt -std=c++0x #-gdwarf-3 #-g -DVTUNE_PROFILE#-g -DVTUNE_PROFILE
+CFLAGS= -Wall -Wextra -lrt -std=c++0x -g#-gdwarf-3 #-g -DVTUNE_PROFILE#-g -DVTUNE_PROFILE
 
 ifeq ($(_USE_FPGA_),TRUE) 
 	ALTERA_LIB_FLAGS=$(shell aocl link-config --arm)

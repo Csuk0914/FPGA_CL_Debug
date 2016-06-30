@@ -34,8 +34,8 @@ struct Array {
       host_data=  nullptr;
       int ret = posix_memalign((void **)&host_data, 4096, sizeof(T)*num_elements);
       assert(ret==0 && "Posix-memalign failed." );
-      allocation_flags = CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR;
-      device_data = clCreateBuffer(env.context , allocation_flags, sizeof(T) * num_elements, host_data, &err);
+      allocation_flags = CL_MEM_READ_WRITE ;//| CL_MEM_USE_HOST_PTR;
+      device_data = clCreateBuffer(env.context , allocation_flags, sizeof(T) * num_elements, NULL/*host_data*/, &err);
       Galois::OpenCL::CHECK_CL_ERROR(err, "Allocation failure...!");
 #endif
    }

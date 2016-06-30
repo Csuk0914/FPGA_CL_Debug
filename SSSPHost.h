@@ -9,7 +9,7 @@
 #define GALOISGPU_APPS_PR_PAGERANKPULL_H_
 
 
-void SSSPHost(int num_steps, char * fname) {
+void SSSPHost(int local_size, int num_steps, char * fname) {
    using namespace Galois::OpenCL;
    typedef Galois::OpenCL::LC_LinearArray_Graph<unsigned int, unsigned int> Graph;
 
@@ -25,7 +25,7 @@ void SSSPHost(int num_steps, char * fname) {
    cl_kernel sssp_kernel = env.kernel2;//("apps/pr/PageRankPull.cl", "pageRank");
 
    size_t num_items = g.num_nodes();
-   size_t k1_global, k1_local=256, k2_global, k2_local=256;
+   size_t k1_global, k1_local=local_size, k2_global, k2_local=local_size;
    k2_global = (size_t) (ceil(num_items / ((double) k2_local)) * k2_local);
    k1_global = (size_t) (ceil(num_items / ((double) k1_local)) * k1_local);
 
@@ -43,19 +43,20 @@ void SSSPHost(int num_steps, char * fname) {
    Galois::OpenCL::CHECK_CL_ERROR(clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event), "kernel1 failed.");
 
    clFinish(env.commands);
-   fprintf(stderr, "Launched kernel\n");
-   clReleaseKernel(sssp_kernel);
+//   fprintf(stderr, "Launched kernel\n");
+//   clReleaseKernel(sssp_kernel);
 
    for (int i = 0; i < num_steps; ++i) {
       //sssp_kernel();
-      sssp_kernel =load_kernel(env, "sssp_kernel");
+//      sssp_kernel =load_kernel(env, "sssp_kernel");
       Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(sssp_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
 
-      Galois::OpenCL::CHECK_CL_ERROR(clEnqueueNDRangeKernel(env.commands, sssp_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event), "kernel2 failed.");
-      fprintf(stderr, "Launched kernel %d\n", i);
+      int err_code = clEnqueueNDRangeKernel(env.commands, sssp_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event);
+      Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel2 failed.");
+  //    fprintf(stderr, "Launched kernel %d\n", i);
       clFinish(env.commands);
-      clReleaseKernel(sssp_kernel);
-      fprintf(stderr, "Launched kernel %d\n", i);
+//      clReleaseKernel(sssp_kernel);
+//      fprintf(stderr, "Launched kernel %d\n", i);
    }
    fprintf(stderr, "Copying to host ...\n");
    g.copy_to_host();
@@ -81,9 +82,11 @@ out_file.close();
 
 }
    if (false)
+{
       for (size_t i = 0; i < g.num_nodes(); ++i) {
          fprintf(stderr, "SSSP [%lu ]  = %d\n", i, g.node_data()[i]);
       }
+}
    fprintf(stderr, "Completed SSSP successfully!\n");
 }
 

@@ -45,13 +45,17 @@ int main(int argc, char ** args) {
        return -1;
     }
     int num_steps = atoi(args[2]);
+    int local_size=256;
+    if(argc==4){
+	local_size=atoi(args[3]);
+	}
 #if SSSP_PULL_VER
     setup_env(env, "SSSPPull.cl", "initialize" , "sssp_kernel" );
-    SSSPHost(num_steps, args[1]);
+    SSSPHost(local_size, num_steps, args[1]);
 #endif
 #if SSSP_PUSH_VER
     setup_env(env, "SSSPPush.cl", "initialize" , "sssp_kernel" );
-    SSSPHost(num_steps,args[1]);
+    SSSPHost(local_size, num_steps,args[1]);
 #endif
     return 0;
 }
