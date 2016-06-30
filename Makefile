@@ -1,11 +1,13 @@
 #OS_NAME_STRING=$(shell uname)
 
 
-CFLAGS= -m64 -Wall -Wextra -lrt -std=c++0x -g -I${CUDA_INC_PATH} -L${CUDA_LIB_PATH} -L/lib64 -lamdocl64
+CFLAGS= -m64 -Wall -Wextra -lrt -std=c++0x -g -I${CUDA_INC_PATH} -L${CUDA_LIB_PATH} -L/lib64 #-lamdocl64
 #ALTERA_LIB_FLAGS=$(shell aocl link-config)
 #ALTERA_INC_FLAGS=$(shell aocl compile-config)
 #CFLAGS+=${ALTERA_INC_FLAGS} -D_ALTERA_FPGA_USE_=1 ${ALTERA_LIB_FLAGS}
-CL_COMPILE_OPTIONS+=-I./CL_HEADER -lpthread -lamdocl64
+#CL_COMPILE_OPTIONS+=-I./CL_HEADER -lpthread -lamdocl64
+CL_COMPILE_OPTIONS+=-I/opt/apps/sysnet/cuda/7.0/cudatk/include -L/opt/apps/sysnet/cuda/7.0/cudatk/lib64  -L/usr/lib64/nvidia -lOpenCL
+	
 
 all : pr sssp
 

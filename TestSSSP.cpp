@@ -27,6 +27,7 @@
 #define DEFAULT_PLATFORM 0
 
 #include "ocl_header.h"
+#include "timer.h"
 
 CLEnv env;
 #include "ArrayImpl.h"

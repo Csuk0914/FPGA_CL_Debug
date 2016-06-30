@@ -14,6 +14,13 @@ void SSSPHost(int local_size, int num_steps, char * fname) {
    typedef Galois::OpenCL::LC_LinearArray_Graph<unsigned int, unsigned int> Graph;
 
    fprintf(stderr, "Launching SSSP(Pull) :: %s\n", fname);
+   unsigned int dev_clk_frequency;
+   clGetDeviceInfo( env.device_id,
+         CL_DEVICE_MAX_CLOCK_FREQUENCY,
+       sizeof(unsigned int),
+       &dev_clk_frequency,
+       NULL);
+   std::cout<<"Timer resolutions :: " << CL_DEVICE_PROFILING_TIMER_RESOLUTION<< " clock cycles @ "<< dev_clk_frequency << "MHz\n";
    Graph g;
    cl_event event;
    g.read(fname);
@@ -30,35 +37,42 @@ void SSSPHost(int local_size, int num_steps, char * fname) {
    k1_global = (size_t) (ceil(num_items / ((double) k1_local)) * k1_local);
 
 
-//   init_kernel.set_work_size(g.num_nodes(), 256);
-//   init_kernel.set_arg(0, &g);
    Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(init_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
 
-//   sssp_kernel.set_work_size(g.num_nodes(), 256);
-//   sssp_kernel.set_arg(0, &g);
    Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(sssp_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
 
 
-   //init_kernel();
    Galois::OpenCL::CHECK_CL_ERROR(clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event), "kernel1 failed.");
 
    clFinish(env.commands);
+   int err_code;
 //   fprintf(stderr, "Launched kernel\n");
 //   clReleaseKernel(sssp_kernel);
-
+//   cl_event start_event = clCreateUserEvent(env.context,&err_code);
+   Timer start_timer;
+   start_timer.start();
    for (int i = 0; i < num_steps; ++i) {
       //sssp_kernel();
 //      sssp_kernel =load_kernel(env, "sssp_kernel");
       Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(sssp_kernel, 0, sizeof(cl_mem), &g.device_ptr()), "Arg, compact is NOT set!");
 
-      int err_code = clEnqueueNDRangeKernel(env.commands, sssp_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event);
+      err_code = clEnqueueNDRangeKernel(env.commands, sssp_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event);
       Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel2 failed.");
   //    fprintf(stderr, "Launched kernel %d\n", i);
       clFinish(env.commands);
 //      clReleaseKernel(sssp_kernel);
 //      fprintf(stderr, "Launched kernel %d\n", i);
    }
-   fprintf(stderr, "Copying to host ...\n");
+   start_timer.stop();
+//   cl_event end_event = clCreateUserEvent(env.context,&err_code);
+//   unsigned long start_time, end_time;
+//   size_t start_time_size = sizeof(start_time);
+//   clGetEventProfilingInfo(start_event, CL_PROFILING_COMMAND_SUBMIT, sizeof(unsigned long ), &start_time, NULL);
+//   clGetEventProfilingInfo(end_event, CL_PROFILING_COMMAND_END, sizeof(unsigned long), &end_time, NULL);
+//   fprintf(stderr, "Time diff %ld \n", end_time-start_time);
+//   fprintf(stderr, "Time diff %6.6g \n", (end_time-start_time)/(1000000000.0f));
+   fprintf(stderr, "\nGaloisTimer %6.6g s\n", start_timer.get_time_seconds());
+      fprintf(stderr, "Copying to host ...\n");
    g.copy_to_host();
    fprintf(stderr, "Done copying to host ...\n");
 {
