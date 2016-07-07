@@ -59,6 +59,7 @@ static inline const char *load_program_source(const char *filename) {
    source[statbuf.st_size] = 0;
    return source;
 }
+__attribute_used__
 static cl_kernel load_kernel(CLEnv & env, std::string kernel_name){
    cl_int err;
    cl_kernel kernel;
@@ -160,7 +161,7 @@ int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, c
       printf("Error: Failed to retrieve kernel work group info! %d\n", err);
       exit(1);
    }
-   printf("Local size detected :: %lu\n", env.local);
+//   printf("Local size detected :: %lu\n", env.local);
    //////////////////////////////////////////////////////
    env.kernel2 = clCreateKernel(env.program, kernel2_name, &err);
       if (!env.kernel2 || err != CL_SUCCESS) {
@@ -172,7 +173,7 @@ int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, c
          printf("Error: Failed to retrieve kernel2 work group info! %d\n", err);
          exit(1);
       }
-      printf("Local size detected :: %lu\n", env.local);
+//      printf("Local size detected :: %lu\n", env.local);
 
    return 0;
 }
