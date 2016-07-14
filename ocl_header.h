@@ -18,7 +18,7 @@ extern "C" {
 #ifdef _ALTERA_FPGA_USE_
 //   # define _ALTERA_EMULATOR_USE_ 1
 #else
-   #define _GALOIS_BUILD_INITIALIZER_KERNEL_ 1
+#define _GALOIS_BUILD_INITIALIZER_KERNEL_ 1
 #endif
 
 #include <stdio.h>
@@ -28,8 +28,6 @@ extern "C" {
 #include <assert.h>
 #include "common_header.h"
 #include "CLErrors.h"
-
-
 
 #ifndef GOPT_OCL_HEADER_H_
 #define GOPT_OCL_HEADER_H_
@@ -46,7 +44,6 @@ struct CLEnv {
    cl_platform_id platform;
 };
 
-
 static inline const char *load_program_source(const char *filename) {
    FILE *fh;
    struct stat statbuf;
@@ -60,27 +57,27 @@ static inline const char *load_program_source(const char *filename) {
    return source;
 }
 __attribute_used__
-static cl_kernel load_kernel(CLEnv & env, std::string kernel_name){
+static cl_kernel load_kernel(CLEnv & env, std::string kernel_name) {
    cl_int err;
    cl_kernel kernel;
    kernel = clCreateKernel(env.program, kernel_name.c_str(), &err);
-      if (!kernel|| err != CL_SUCCESS) {
-         printf("Error: Failed to create compute kernel!\n");
-         exit(1);
-      }
-      err = clGetKernelWorkGroupInfo(kernel, env.device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(env.local), &env.local, NULL);
-      if (err != CL_SUCCESS) {
-         printf("Error: Failed to retrieve kernel work group info! %d\n", err);
-         exit(1);
-      }
-      printf("Local size detected :: %lu\n", env.local);
-      //////////////////////////////////////////////////////
-      return kernel;
+   if (!kernel || err != CL_SUCCESS) {
+      printf("Error: Failed to create compute kernel!\n");
+      exit(1);
+   }
+   err = clGetKernelWorkGroupInfo(kernel, env.device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(env.local), &env.local, NULL);
+   if (err != CL_SUCCESS) {
+      printf("Error: Failed to retrieve kernel work group info! %d\n", err);
+      exit(1);
+   }
+   printf("Local size detected :: %lu\n", env.local);
+   //////////////////////////////////////////////////////
+   return kernel;
 }
 /*********************************************************************
  *
  **********************************************************************/
-int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, const char * kernel2_name) {
+int setup_env(CLEnv & env, const char * _filename, const char * kernel1_name, const char * kernel2_name) {
    int err;
    cl_platform_id platforms[3];
    err = clGetPlatformIDs(3, &platforms[0], NULL);
@@ -111,27 +108,27 @@ int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, c
    }
    // Create the compute program from the source buffer
 
-   const std::string filename (_filename);
+   const std::string filename(_filename);
 #if _ALTERA_FPGA_USE_
-      {
-         FILE *fh;
-         std::string compiled_file_name(filename);
-         compiled_file_name.replace(compiled_file_name.length()-3, compiled_file_name.length(),".aocx");
-         fprintf(stderr, "About to load binary file :: %s \n", compiled_file_name.c_str());
-         if (!(fh = fopen(compiled_file_name.c_str(), "rb")))
-            return EXIT_FAILURE;
-         fseek(fh, 0, SEEK_END);
-         size_t len = ftell(fh);
-         unsigned char * source = (unsigned char *) malloc(len);
-         rewind(fh);
-         fread(source, len, 1, fh);
-         env.program = clCreateProgramWithBinary(env.context, 1, &env.device_id, &len, (const unsigned char **) &source, NULL, &err);
-         if(!env.program){
-            fprintf(stderr, "clCreateProgramWithSource");
-            return EXIT_FAILURE;
-         }
-         fprintf(stderr, "Loaded program successfully [Len=%d]....\n", len);
+   {
+      FILE *fh;
+      std::string compiled_file_name(filename);
+      compiled_file_name.replace(compiled_file_name.length()-3, compiled_file_name.length(),".aocx");
+      fprintf(stderr, "About to load binary file :: %s \n", compiled_file_name.c_str());
+      if (!(fh = fopen(compiled_file_name.c_str(), "rb")))
+      return EXIT_FAILURE;
+      fseek(fh, 0, SEEK_END);
+      size_t len = ftell(fh);
+      unsigned char * source = (unsigned char *) malloc(len);
+      rewind(fh);
+      fread(source, len, 1, fh);
+      env.program = clCreateProgramWithBinary(env.context, 1, &env.device_id, &len, (const unsigned char **) &source, NULL, &err);
+      if(!env.program) {
+         fprintf(stderr, "clCreateProgramWithSource");
+         return EXIT_FAILURE;
       }
+      fprintf(stderr, "Loaded program successfully [Len=%d]....\n", len);
+   }
 #else
    const char * source = load_program_source(filename.c_str());
    env.program = clCreateProgramWithSource(env.context, 1, (const char **) &source, NULL, &err);
@@ -161,9 +158,10 @@ int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, c
       printf("Error: Failed to retrieve kernel work group info! %d\n", err);
       exit(1);
    }
-//   printf("Local size detected :: %lu\n", env.local);
+   fprintf(stderr, "K1-LocalSize,%lu\n", env.local);
    //////////////////////////////////////////////////////
-   env.kernel2 = clCreateKernel(env.program, kernel2_name, &err);
+   if (kernel2_name != nullptr) {
+      env.kernel2 = clCreateKernel(env.program, kernel2_name, &err);
       if (!env.kernel2 || err != CL_SUCCESS) {
          printf("Error: Failed to create compute kernel2!\n");
          exit(1);
@@ -173,11 +171,11 @@ int setup_env(CLEnv & env, const char * _filename , const char * kernel1_name, c
          printf("Error: Failed to retrieve kernel2 work group info! %d\n", err);
          exit(1);
       }
-//      printf("Local size detected :: %lu\n", env.local);
+      fprintf(stderr, "K2-LocalSize,%lu\n", env.local);
+   }
 
    return 0;
 }
 //////////////////////////////////////////
-
 
 #endif /* GOPT_OCL_HEADER_H_ */

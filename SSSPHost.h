@@ -51,7 +51,7 @@ void SSSPHost(int local_size, int num_steps, char * fname) {
 
       err_code = clEnqueueNDRangeKernel(env.commands, sssp_kernel, 1, nullptr, &k2_global, &k2_local, 0, nullptr, &event);
       Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel2 failed.");
-      //    fprintf(stderr, "Launched kernel %d\n", i);
+      fprintf(stdout, "\b\b\b\b\b\b[%4d]", i);
       clFinish(env.commands);
 //      clReleaseKernel(sssp_kernel);
 //      fprintf(stderr, "Launched kernel %d\n", i);

@@ -37,3 +37,7 @@ sssp_push: TestSSSP.cpp SSSPHost.h
 	${CXX} ${CFLAGS}  -D_USE_CL -DSSSP_PUSH_VER -I. -m64 TestSSSP.cpp  -o sssp_push $(CL_COMPILE_OPTIONS)
 	 
 
+#==========================================
+micro: micro/*
+	${CXX} ${CFLAGS}  -D_USE_CL -I. -I./micro/ -m64  micro/TestMicro.cpp  -o test_micro $(CL_COMPILE_OPTIONS)
+	
