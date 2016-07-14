@@ -34,7 +34,7 @@ CLEnv env;
 #include  "LC_LinearArray_Graph.h"
 
 
-#include "SSSPHost.h"
+#include "BFSHost.h"
 
 ////////////##############################################################///////////
 ////////////##############################################################///////////
@@ -42,7 +42,7 @@ int main(int argc, char ** args) {
 
 
     if(argc<2){
-       fprintf(stderr, "Usage \"./binary <filename> <numIterations>\"\n");
+       fprintf(stderr, "Usage \"./%s <filename> <numIterations>\"\n", args[0]);
        return -1;
     }
     int num_steps = atoi(args[2]);
@@ -50,13 +50,13 @@ int main(int argc, char ** args) {
     if(argc==4){
 	local_size=atoi(args[3]);
 	}
-#if SSSP_PULL_VER
-    setup_env(env, "SSSPPull.cl", "initialize" , "sssp_kernel" );
-    SSSPHost(local_size, num_steps, args[1]);
+#if BFS_PULL_VER
+    setup_env(env, "BFSPull.cl", "initialize" , "sssp_kernel" );
+    BFSHost(local_size, num_steps, args[1]);
 #endif
-#if SSSP_PUSH_VER
-    setup_env(env, "SSSPPush.cl", "initialize" , "sssp_kernel" );
-    SSSPHost(local_size, num_steps,args[1]);
+#if BFS_PUSH_VER
+    setup_env(env, "BFSPush.cl", "initialize" , "sssp_kernel" );
+    BFSHost(local_size, num_steps,args[1]);
 #endif
     return 0;
 }

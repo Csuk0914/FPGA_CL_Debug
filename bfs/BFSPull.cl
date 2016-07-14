@@ -43,7 +43,7 @@ __kernel void initialize(__global uint * _g) {
 }
 
 //SSSP - pull
-__kernel void sssp_kernel(__global int * _g) {
+__kernel void bfs_kernel(__global int * _g) {
    __local Graph gp; // = (__global Graph *)(_g);
    init(&gp, _g);
    __local Graph * g = &gp;
@@ -52,10 +52,9 @@ __kernel void sssp_kernel(__global int * _g) {
       __global NodeData * sdata = &g->_node_data[src];
       for(int nbr = g->_out_index[src]; nbr != g->_out_index[src+1]; ++nbr) {
          int dst = g->_out_neighbors[nbr];
-         int wt = g->_out_edge_data[nbr];
          __global NodeData * ddata = &g->_node_data[dst];
-         if(*sdata > *ddata + wt){
-            *sdata = *ddata+wt;
+         if(*sdata > *ddata + 1){
+            *sdata = *ddata+1;
          }//end if
 
       }//end for nbr

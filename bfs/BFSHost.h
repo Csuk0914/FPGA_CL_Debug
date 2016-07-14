@@ -5,14 +5,19 @@
  *      Author: rashid
  */
 
-#ifndef GALOISGPU_APPS_PR_PAGERANKPULL_H_
-#define GALOISGPU_APPS_PR_PAGERANKPULL_H_
+#ifndef GALOISGPU_APPS_BFS_H_
+#define GALOISGPU_APPS_BFS_H_
 
-void SSSPHost(int local_size, int num_steps, char * fname) {
+void BFSHost(int local_size, int num_steps, char * fname) {
+#ifdef BFS_PULL_VER
+      const char * app_name = "BFS_PULL";
+#elif defined (BFS_PUSH_VER)
+      const char * app_name = "BFS_PUSH";
+#endif
+
    using namespace Galois::OpenCL;
    typedef Galois::OpenCL::LC_LinearArray_Graph<unsigned int, unsigned int> Graph;
 
-//   fprintf(stderr, "Launching SSSP(Pull) :: %s\n", fname);
    unsigned int dev_clk_frequency;
    clGetDeviceInfo(env.device_id, CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(unsigned int), &dev_clk_frequency, NULL);
    std::cout << "Timer resolutions :: " << CL_DEVICE_PROFILING_TIMER_RESOLUTION << " clock cycles @ " << dev_clk_frequency << "MHz\n";
@@ -71,14 +76,7 @@ void SSSPHost(int local_size, int num_steps, char * fname) {
    {
 
       char out_file_name[1024];
-      sprintf(out_file_name, "%s.SSSP_%s_%d-step_%d-thread.log", fname,
-#ifdef SSSP_PULL_VER
-            "PULL"
-#elif defined (SSSP_PUSH_VER)
-            "PUSH"
-#endif 
-      ,num_steps, local_size);
-
+      sprintf(out_file_name, "%s.%s_%d-step_%d-thread.log", fname,app_name ,num_steps, local_size);
       std::ofstream out_file(out_file_name);
 
       for (size_t i = 0; i < g.num_nodes(); ++i) {
@@ -90,10 +88,10 @@ void SSSPHost(int local_size, int num_steps, char * fname) {
    }
    if (false) {
       for (size_t i = 0; i < g.num_nodes(); ++i) {
-         fprintf(stderr, "SSSP [%lu ]  = %d\n", i, g.node_data()[i]);
+         fprintf(stderr, "BFS [%lu ]  = %d\n", i, g.node_data()[i]);
       }
    }
-   fprintf(stderr, "Completed SSSP successfully!\n");
+   fprintf(stderr, "Completed %s successfully!\n",app_name);
 }
 
-#endif /* GALOISGPU_APPS_PR_PAGERANKPULL_H_ */
+#endif /* GALOISGPU_APPS_BFS_H_ */

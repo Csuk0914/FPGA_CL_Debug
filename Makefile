@@ -40,4 +40,17 @@ sssp_push: TestSSSP.cpp SSSPHost.h
 #==========================================
 micro: micro/*
 	${CXX} ${CFLAGS}  -D_USE_CL -I. -I./micro/ -m64  micro/TestMicro.cpp  -o test_micro $(CL_COMPILE_OPTIONS)
+
+#==========================================
+bfs : bfs_pull bfs_push
+
+bfs_clean : 
+	rm bfs_pull bfs_push
+
+bfs_pull: bfs/TestBFS.cpp  bfs/BFSHost.h
+	${CXX} ${CFLAGS}  -D_USE_CL -DBFS_PULL_VER -I. -Ibfs/ -m64  bfs/TestBFS.cpp  -o bfs_pull $(CL_COMPILE_OPTIONS)
+	
+bfs_push: bfs/TestBFS.cpp bfs/BFSHost.h
+	${CXX} ${CFLAGS}  -D_USE_CL -DBFS_PUSH_VER -I. -Ibfs/ -m64 bfs/TestBFS.cpp  -o bfs_push $(CL_COMPILE_OPTIONS)
+	 
 	
