@@ -1,0 +1,50 @@
+CXX=clang++ #arm-linux-gnueabihf-g++
+_USE_FPGA_=TRUE
+OS_NAME_STRING=$(shell uname)
+CFLAGS= -Wall -Wextra -lrt -std=c++0x #-gdwarf-3 #-g -DVTUNE_PROFILE#-g -DVTUNE_PROFILE
+
+ifeq ($(_USE_FPGA_),TRUE) 
+	ALTERA_LIB_FLAGS=$(shell aocl link-config)
+	ALTERA_INC_FLAGS=$(shell aocl compile-config)
+	CFLAGS+=${ALTERA_INC_FLAGS} -D_ALTERA_FPGA_USE_=1
+else
+	ALTERA_LIB_FLAGS=
+	ALTERA_INC_FLAGS=
+endif
+ 
+CL_COMPILE_OPTIONS+=-I./CL_HEADER
+CFLAGS+=${ALTERA_LIB_FLAGS}
+
+
+all : pr sssp
+
+clean: sssp_clean pr_clean
+
+pr : pr_pull pr_push
+
+pr_clean : 
+	rm pr_pull pr_push
+
+pr_pull: TestPageRank.cpp
+	${CXX} -D_USE_CL -DPR_PULL_VER -I. TestPageRank.cpp  -o pr_pull ${CL_COMPILE_OPTIONS} ${CFLAGS} 
+	
+pr_push: TestPageRank.cpp
+	${CXX} -D_USE_CL -DPR_PUSH_VER -I. TestPageRank.cpp  -o pr_push $(CL_COMPILE_OPTIONS) ${CFLAGS}
+ 
+	 
+
+sssp : sssp_pull sssp_push
+
+sssp_clean : 
+	rm sssp_pull sssp_push
+
+sssp_pull: TestSSSP.cpp SSSPHost.h
+	${CXX} -D_USE_CL -DSSSP_PULL_VER -I. TestSSSP.cpp  -o sssp_pull $(CL_COMPILE_OPTIONS) ${CFLAGS}
+	
+sssp_push: TestSSSP.cpp SSSPHost.h
+	${CXX} -D_USE_CL -DSSSP_PUSH_VER -I. TestSSSP.cpp  -o sssp_push $(CL_COMPILE_OPTIONS) ${CFLAGS}
+	 
+micro: micro/*
+	${CXX} -D_USE_CL -I. -Imicro/ micro/TestMicro.cpp  -o test_micro $(CL_COMPILE_OPTIONS) ${CFLAGS}
+	 
+ 
