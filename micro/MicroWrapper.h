@@ -247,9 +247,10 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
       shared_location.host_ptr()[i] = 0;
    }
    shared_location.copy_to_device();
-
+   Timer write_timer, read_timer;
    for (size_t num_threads = local_size; num_threads < max_num_threads; num_threads *= 2) {
 
+      int fail_counter=0;
       cl_kernel init_kernel= env.kernel1; //("apps/pr/PageRankPull.cl", "pageRank");
       size_t k1_global, k1_local = local_size;
       k1_global = (size_t) (ceil(num_threads / ((double) k1_local)) * k1_local);
@@ -258,22 +259,37 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
       Timer start_timer;
       start_timer.start();
       for (int i = 0; i < num_steps; ++i) {
-         Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(init_kernel, 0, sizeof(cl_mem), &shared_location.device_ptr()), "Arg, compact is NOT set!");
-         err_code = clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event);
-         Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel1 failed.");
-         clFinish(env.commands);
-	
-		for(int n=0; n<num_threads; ++n){
-		    int res=0;
-		    err_code = clEnqueueReadBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
-		    Galois::OpenCL::CHECK_CL_ERROR(err_code, "Read int failed.");
-                    fprintf(stderr, "%d, ",res) ;
-		}
-		fprintf(stderr, "\n");
+	      write_timer.clear();
+	      write_timer.start();
+	      for(int n=0; n<num_threads; ++n){
+		      int res=0;
+		      err_code = clEnqueueWriteBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
+		      Galois::OpenCL::CHECK_CL_ERROR(err_code, "Write int failed.");
+		      //fprintf(stderr, "%d, ",res) ;
+	      }
+		write_timer.stop();
+	      Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(init_kernel, 0, sizeof(cl_mem), &shared_location.device_ptr()), "Arg, compact is NOT set!");
+	      err_code = clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event);
+	      Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel1 failed.");
+	      clFinish(env.commands);
+
+	      read_timer.clear();
+	      read_timer.start();
+	      for(int n=0; n<num_threads; ++n){
+		      int res=0;
+		      err_code = clEnqueueReadBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
+		      Galois::OpenCL::CHECK_CL_ERROR(err_code, "Read int failed.");
+		      if(n!=res)
+   			      fail_counter++;
+	//	      fprintf(stderr, "%d, ",res) ;
+	      }
+	      read_timer.stop();
+	      fprintf(stderr, "\n");
       }
       start_timer.stop();
       shared_location.copy_to_host();
-      fprintf(stderr, "STAT,%s, %d, TotalTime, %6.6g,s, AvgTime, %6.6g,s,Runs,%d, Threads,%lu, Local, %lu \n", test_name.c_str(),shared_location.host_ptr()[0], start_timer.get_time_seconds(),
+      fprintf(stderr, "STAT,%s,FailCounter, %d, WriteTime, %6.6g,s, ReadTime, %6.6g,s, TotalTime, %6.6g,s, AvgTime, %6.6g,s,Runs,%d, Threads,%lu, Local, %lu \n", 
+			test_name.c_str(),fail_counter, write_timer.get_time_seconds(), read_timer.get_time_seconds(), start_timer.get_time_seconds(),
             start_timer.get_time_seconds() / (float) num_steps, num_steps, num_threads, local_size);
 	{
 
