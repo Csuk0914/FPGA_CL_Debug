@@ -239,7 +239,7 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
    std::string test_name;
    test_name="MemInit";
    setup_env(env, "micro/MemoryInitialize.cl", "initialize_memory", nullptr);
-   const int num_steps = 15;
+   const int num_steps = 1;
    using namespace Galois::OpenCL;
    Array<int> shared_location(max_num_threads);
    cl_event event;
@@ -262,11 +262,23 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
          err_code = clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event);
          Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel1 failed.");
          clFinish(env.commands);
+	{
+		for(int n=0; n<max_num_threads; ++n){
+		    int res=0;
+		    err_code = clEnqueueReadBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
+		    Galois::OpenCL::CHECK_CL_ERROR(err_code, "Read int failed.");
+                    std::cout<<res<<" " ;
+		}
+		std::cout<<"\n";
+	}
       }
       start_timer.stop();
       shared_location.copy_to_host();
       fprintf(stderr, "STAT,%s, %d, TotalTime, %6.6g,s, AvgTime, %6.6g,s,Runs,%d, Threads,%lu, Local, %lu \n", test_name.c_str(),shared_location.host_ptr()[0], start_timer.get_time_seconds(),
             start_timer.get_time_seconds() / (float) num_steps, num_steps, num_threads, local_size);
+	{
+
+	}	
 
    }
    fprintf(stderr, "Completed %s successfully!\n", test_name.c_str());

@@ -81,7 +81,7 @@ int main(int argc, char ** args) {
     }else if(test_index == MICRO_VARIANTS::ADD_DIFF_COAL){
        test_atomic_diff_location_uncoal(false, false,num_threads, local_size);
     }else if(test_index == MICRO_VARIANTS::MEM_READ){
-       test_memory_read(num_threads, local_size);
+       test_memory_reads(num_threads, local_size);
     }
     return 0;
 }

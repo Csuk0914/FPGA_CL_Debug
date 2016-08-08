@@ -59,7 +59,7 @@ bfs_push: bfs/TestBFS.cpp bfs/BFSHost.h
 	 
 #===========================================================================================================
 
-micro: micro/*
+test_micro: micro/TestMicro.cpp micro/*.h
 	${CXX} -D_USE_CL -I. -Imicro/ micro/TestMicro.cpp  -o test_micro $(CL_COMPILE_OPTIONS) ${CFLAGS}
 
 clean_micro:
