@@ -234,4 +234,43 @@ void SSSPHost(int local_size, int num_steps, char * fname) {
 }
 #endif // end commented code
 
+
+void test_memory_reads(size_t max_num_threads, size_t local_size) {
+   std::string test_name;
+   test_name="MemInit";
+   setup_env(env, "micro/MemoryInitialize.cl", "initialize_memory", nullptr);
+   const int num_steps = 15;
+   using namespace Galois::OpenCL;
+   Array<int> shared_location(max_num_threads);
+   cl_event event;
+   for (size_t i = 0; i < max_num_threads; ++i) {
+      shared_location.host_ptr()[i] = 0;
+   }
+   shared_location.copy_to_device();
+
+   for (size_t num_threads = local_size; num_threads < max_num_threads; num_threads *= 2) {
+
+      cl_kernel init_kernel= env.kernel1; //("apps/pr/PageRankPull.cl", "pageRank");
+      size_t k1_global, k1_local = local_size;
+      k1_global = (size_t) (ceil(num_threads / ((double) k1_local)) * k1_local);
+
+      int err_code;
+      Timer start_timer;
+      start_timer.start();
+      for (int i = 0; i < num_steps; ++i) {
+         Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(init_kernel, 0, sizeof(cl_mem), &shared_location.device_ptr()), "Arg, compact is NOT set!");
+         err_code = clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event);
+         Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel1 failed.");
+         clFinish(env.commands);
+      }
+      start_timer.stop();
+      shared_location.copy_to_host();
+      fprintf(stderr, "STAT,%s, %d, TotalTime, %6.6g,s, AvgTime, %6.6g,s,Runs,%d, Threads,%lu, Local, %lu \n", test_name.c_str(),shared_location.host_ptr()[0], start_timer.get_time_seconds(),
+            start_timer.get_time_seconds() / (float) num_steps, num_steps, num_threads, local_size);
+
+   }
+   fprintf(stderr, "Completed %s successfully!\n", test_name.c_str());
+}
+
+
 #endif /* GALOISGPU_APPS_MICRO_WRAPPER_H_ */

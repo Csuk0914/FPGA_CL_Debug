@@ -52,15 +52,15 @@ bfs_clean :
 	rm bfs_pull bfs_push
 
 bfs_pull: bfs/TestBFS.cpp bfs/BFSHost.h
-	${CXX} -D_USE_CL -DBFS_PULL_VER -I. -Ibfs/ TestBFS.cpp  -o bfs_pull $(CL_COMPILE_OPTIONS) ${CFLAGS}
+	${CXX} -D_USE_CL -DBFS_PULL_VER -I. -Ibfs/ bfs/TestBFS.cpp  -o bfs_pull $(CL_COMPILE_OPTIONS) ${CFLAGS}
 	
 bfs_push: bfs/TestBFS.cpp bfs/BFSHost.h
-	${CXX} -D_USE_CL -DBFS_PUSH_VER -I. -Ibfs/ TestBFS.cpp  -o bfs_push $(CL_COMPILE_OPTIONS) ${CFLAGS}
+	${CXX} -D_USE_CL -DBFS_PUSH_VER -I. -Ibfs/ bfs/TestBFS.cpp  -o bfs_push $(CL_COMPILE_OPTIONS) ${CFLAGS}
 	 
 #===========================================================================================================
 
 micro: micro/*
-	${CXX} -D_USE_CL -I. -Imicro/ TestMicro.cpp  -o test_micro $(CL_COMPILE_OPTIONS) ${CFLAGS}
+	${CXX} -D_USE_CL -I. -Imicro/ micro/TestMicro.cpp  -o test_micro $(CL_COMPILE_OPTIONS) ${CFLAGS}
 
 clean_micro:
 	rm test_micro

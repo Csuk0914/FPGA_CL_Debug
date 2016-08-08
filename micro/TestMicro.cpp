@@ -36,9 +36,9 @@ CLEnv env;
 
 
 #include "MicroWrapper.h"
-const int NUM_TESTS = 7;
-enum MICRO_VARIANTS{ATOMIC_SINGLE, ATOMIC_DIFF, ATOMIC_DIFF_UNCOAL,ATOMIC_DIFF_COAL, ADD_DIFF, ADD_DIFF_UNCOAL,ADD_DIFF_COAL};
-const char  * test_names []= {"atomic_single", "atomic_diff" , "atomic_diff_uncoal" ,"atomic_diff_coal" ,  "add_diff" , "add_diff_uncoal" , "add_diff_coal" };
+const int NUM_TESTS = 8;
+enum MICRO_VARIANTS{ATOMIC_SINGLE, ATOMIC_DIFF, ATOMIC_DIFF_UNCOAL,ATOMIC_DIFF_COAL, ADD_DIFF, ADD_DIFF_UNCOAL,ADD_DIFF_COAL, MEM_READ};
+const char  * test_names []= {"atomic_single", "atomic_diff" , "atomic_diff_uncoal" ,"atomic_diff_coal" ,  "add_diff" , "add_diff_uncoal" , "add_diff_coal", "mem_read" };
 ////////////##############################################################///////////
 ////////////##############################################################///////////
 int main(int argc, char ** args) {
@@ -80,6 +80,8 @@ int main(int argc, char ** args) {
        test_atomic_diff_location_uncoal(false, true,num_threads, local_size);
     }else if(test_index == MICRO_VARIANTS::ADD_DIFF_COAL){
        test_atomic_diff_location_uncoal(false, false,num_threads, local_size);
+    }else if(test_index == MICRO_VARIANTS::MEM_READ){
+       test_memory_read(num_threads, local_size);
     }
     return 0;
 }
