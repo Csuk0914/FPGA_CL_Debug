@@ -262,15 +262,14 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
          err_code = clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event);
          Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel1 failed.");
          clFinish(env.commands);
-	{
-		for(int n=0; n<max_num_threads; ++n){
+	
+		for(int n=0; n<num_threads; ++n){
 		    int res=0;
 		    err_code = clEnqueueReadBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
 		    Galois::OpenCL::CHECK_CL_ERROR(err_code, "Read int failed.");
-                    std::cout<<res<<" " ;
+                    fprintf(stderr, "%d, ",res) ;
 		}
-		std::cout<<"\n";
-	}
+		fprintf(stderr, "\n");
       }
       start_timer.stop();
       shared_location.copy_to_host();
