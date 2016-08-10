@@ -32,13 +32,16 @@
 
 CLEnv env;
 #include "ArrayImpl.h"
+#ifdef _ALTERA_SVM_
+   #include "SVMArrayImpl.h"
+#endif
 #include  "LC_LinearArray_Graph.h"
 
 
 #include "MicroWrapper.h"
-const int NUM_TESTS = 8;
-enum MICRO_VARIANTS{ATOMIC_SINGLE, ATOMIC_DIFF, ATOMIC_DIFF_UNCOAL,ATOMIC_DIFF_COAL, ADD_DIFF, ADD_DIFF_UNCOAL,ADD_DIFF_COAL, MEM_READ};
-const char  * test_names []= {"atomic_single", "atomic_diff" , "atomic_diff_uncoal" ,"atomic_diff_coal" ,  "add_diff" , "add_diff_uncoal" , "add_diff_coal", "mem_read" };
+const int NUM_TESTS = 9;
+enum MICRO_VARIANTS{ATOMIC_SINGLE, ATOMIC_DIFF, ATOMIC_DIFF_UNCOAL,ATOMIC_DIFF_COAL, ADD_DIFF, ADD_DIFF_UNCOAL,ADD_DIFF_COAL, MEM_READ, SVM_MEM_READ};
+const char  * test_names []= {"atomic_single", "atomic_diff" , "atomic_diff_uncoal" ,"atomic_diff_coal" ,  "add_diff" , "add_diff_uncoal" , "add_diff_coal", "mem_read" , "svm_mem_read"};
 ////////////##############################################################///////////
 ////////////##############################################################///////////
 int main(int argc, char ** args) {
@@ -82,6 +85,8 @@ int main(int argc, char ** args) {
        test_atomic_diff_location_uncoal(false, false,num_threads, local_size);
     }else if(test_index == MICRO_VARIANTS::MEM_READ){
        test_memory_reads(num_threads, local_size);
+    }else if(test_index == MICRO_VARIANTS::SVM_MEM_READ){
+       test_svm_memory_reads(num_threads, local_size);
     }
     return 0;
 }

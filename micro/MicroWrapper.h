@@ -4,7 +4,6 @@
  *  Created on: Apr 24, 2016
  *      Author: rashid
  */
-
 #ifndef GALOISGPU_APPS_MICRO_WRAPPER_H_
 #define GALOISGPU_APPS_MICRO_WRAPPER_H_
 
@@ -264,7 +263,10 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
 	      for(int n=0; n<num_threads; ++n){
 		      int res=0;
 		      err_code = clEnqueueWriteBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
-		      Galois::OpenCL::CHECK_CL_ERROR(err_code, "Write int failed.");
+		      //Galois::OpenCL::CHECK_CL_ERROR(err_code, "Write int failed.");
+		      if(err_code){
+			fprintf(stderr, "Write int failed.%d.", err_code);
+		}
 		      //fprintf(stderr, "%d, ",res) ;
 	      }
 		write_timer.stop();
@@ -297,6 +299,71 @@ void test_memory_reads(size_t max_num_threads, size_t local_size) {
 
    }
    fprintf(stderr, "Completed %s successfully!\n", test_name.c_str());
+}
+///////////////////////////////////////////////////////////////////////
+
+void test_svm_memory_reads(size_t max_num_threads, size_t local_size) {
+#ifdef _ALTERA_SVM_
+   std::string test_name;
+   test_name="SVMMemInit";
+   setup_env(env, "micro/MemoryInitialize.cl", "initialize_memory", nullptr);
+   const int num_steps = 1;
+   using namespace Galois::OpenCL;
+   SVMArray<int> shared_location(max_num_threads);
+   cl_event event;
+   for (size_t i = 0; i < max_num_threads; ++i) {
+      shared_location.host_ptr()[i] = 0;
+   }
+   shared_location.copy_to_device();
+   Timer write_timer, read_timer;
+   for (size_t num_threads = local_size; num_threads < max_num_threads; num_threads *= 2) {
+
+      int fail_counter=0;
+      cl_kernel init_kernel= env.kernel1; //("apps/pr/PageRankPull.cl", "pageRank");
+      size_t k1_global, k1_local = local_size;
+      k1_global = (size_t) (ceil(num_threads / ((double) k1_local)) * k1_local);
+
+      int err_code;
+      Timer start_timer;
+      start_timer.start();
+      for (int i = 0; i < num_steps; ++i) {
+	      write_timer.clear();
+	      write_timer.start();
+		write_timer.stop();
+	      Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArgSVMPointerAltera(init_kernel, 0, (void*)shared_location.device_ptr()), "Arg, compact is NOT set!");
+	      //Galois::OpenCL::CHECK_CL_ERROR(clSetKernelArg(init_kernel, 0, sizeof(cl_mem), &shared_location.device_ptr()), "Arg, compact is NOT set!");
+	      err_code = clEnqueueNDRangeKernel(env.commands, init_kernel, 1, nullptr, &k1_global, &k1_local, 0, nullptr, &event);
+	      Galois::OpenCL::CHECK_CL_ERROR(err_code, "kernel1 failed.");
+	      clFinish(env.commands);
+
+	      read_timer.clear();
+	      read_timer.start();
+	      for(int n=0; n<num_threads; ++n){
+		      int res=shared_location.host_ptr()[n];
+		      //err_code = clEnqueueReadBuffer(env.commands, shared_location.device_ptr(), CL_TRUE, n*sizeof(int), sizeof(int), &res, 0, nullptr, nullptr);
+		      Galois::OpenCL::CHECK_CL_ERROR(err_code, "Read int failed.");
+		      if(n!=res){
+   			      fail_counter++;
+		      fprintf(stderr, "%d->%d, ",res,n) ;
+}
+	      }
+	      read_timer.stop();
+	      fprintf(stderr, "\n");
+      }
+      start_timer.stop();
+      shared_location.copy_to_host();
+      fprintf(stderr, "STAT,%s,FailCounter, %d, WriteTime, %6.6g,s, ReadTime, %6.6g,s, TotalTime, %6.6g,s, AvgTime, %6.6g,s,Runs,%d, Threads,%lu, Local, %lu \n", 
+			test_name.c_str(),fail_counter, write_timer.get_time_seconds(), read_timer.get_time_seconds(), start_timer.get_time_seconds(),
+            start_timer.get_time_seconds() / (float) num_steps, num_steps, num_threads, local_size);
+	{
+
+	}	
+
+   }
+   fprintf(stderr, "Completed %s successfully!\n", test_name.c_str());
+#else
+   fprintf(stderr, "Failed - _ALTERA_SVM_ not defined!!\n");
+#endif
 }
 
 
